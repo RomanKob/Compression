@@ -1,7 +1,29 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <string>
+#include "Node.h"
 using namespace std;
+
+void AddNode(Node** head, char value, int fr)
+{
+    Node* pnew;
+    Node** pp = head;
+    while (*pp)
+    {
+        if (fr < (*pp)->freq)
+        {
+            break;
+        }
+        else
+        {
+            pp = &((*pp)->next);
+        }
+    }
+    pnew = (Node*)malloc(sizeof(Node));
+    pnew->freq = fr;
+    pnew->next = *pp;
+    *pp = pnew;
+}
 
 int main()
 {
