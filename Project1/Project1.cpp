@@ -22,9 +22,39 @@ void AddNode(Node** head, char value, int fr)
     pnew = (Node*)malloc(sizeof(Node));
     pnew->freq = fr;
     pnew->next = *pp;
+    pnew->symb = value;
     *pp = pnew;
 }
-
+void CountFreq(FILE* fr, int* freq)
+{
+    fseek(fr, 0L, SEEK_END);
+    long lenght = ftell(fr);
+    fseek(fr, 0L, SEEK_SET);
+    for (int i = 0; i < lenght; i++)
+    {
+        freq[(unsigned char)fgetc(fr)]++;
+    }
+}
+void FillList(int* freq, Node** head)
+{  
+    for (int i = 0; i < 128; i++)
+    {
+        if (freq[i] != 0)
+        {
+            AddNode(head, (char)i, freq[i]);
+        }
+    }
+}
+void Print(Node* head)
+{
+    Node* p = head;
+    while (p)
+    {
+        cout << p->symb << " ";
+        p = p->next;
+    }
+    cout << "\n";
+}
 int main()
 {
 	while (true)
@@ -35,15 +65,11 @@ int main()
         if (answer == "1")
         {
             auto fr = fopen("Input", "rb");
-            fseek(fr, 0L, SEEK_END);
-            long lenght = ftell(fr);
-            fseek(fr, 0L, SEEK_SET);
-            cout << lenght << endl;
             int freq[128] = { 0 };
-            for (int i = 0; i < lenght; i++)
-            {
-                freq[(unsigned char)fgetc(fr)]++;
-            }
+            Node* head = 0;
+            CountFreq(fr, freq);
+            FillList(freq, &head);
+            Print(head);
             fclose(fr);
         }
         if (answer == "2")
