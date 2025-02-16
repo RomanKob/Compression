@@ -1,10 +1,9 @@
 #pragma once
-struct Node
-{
+struct Node {
 	char symb;
 	bool isSymb;
 	int freq;
-	int level;
+	char code[128];
 	struct Node* next;
 	struct Node* right;
 	struct Node* left;

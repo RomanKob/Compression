@@ -2,29 +2,10 @@
 #include <iostream>
 #include <string>
 #include "Node.h"
+#include "Compressor.h"
 using namespace std;
 
-void AddNode(Node** head, char value, int fr)
-{
-    Node* pnew;
-    Node** pp = head;
-    while (*pp)
-    {
-        if (fr < (*pp)->freq)
-        {
-            break;
-        }
-        else
-        {
-            pp = &((*pp)->next);
-        }
-    }
-    pnew = (Node*)malloc(sizeof(Node));
-    pnew->freq = fr;
-    pnew->next = *pp;
-    pnew->symb = value;
-    *pp = pnew;
-}
+
 void CountFreq(FILE* fr, int* freq)
 {
     fseek(fr, 0L, SEEK_END);
@@ -35,26 +16,21 @@ void CountFreq(FILE* fr, int* freq)
         freq[(unsigned char)fgetc(fr)]++;
     }
 }
-void FillList(int* freq, Node** head)
+void FillList(int* freq, Compressor* comp)
 {  
     for (int i = 0; i < 128; i++)
     {
         if (freq[i] != 0)
         {
-            AddNode(head, (char)i, freq[i]);
+            Node* node = (Node*)malloc(sizeof(Node));
+            node->symb = i;
+            node->isSymb = 1;
+            node->freq = freq[i];
+            comp->AddNode(node);
         }
     }
 }
-void Print(Node* head)
-{
-    Node* p = head;
-    while (p)
-    {
-        cout << p->symb << " ";
-        p = p->next;
-    }
-    cout << "\n";
-}
+
 int main()
 {
 	while (true)
@@ -66,10 +42,11 @@ int main()
         {
             auto fr = fopen("Input", "rb");
             int freq[128] = { 0 };
-            Node* head = 0;
             CountFreq(fr, freq);
-            FillList(freq, &head);
-            Print(head);
+            Compressor comp;
+            FillList(freq, &comp);
+            comp.print_list();
+            comp.BuildTree();
             fclose(fr);
         }
         if (answer == "2")
