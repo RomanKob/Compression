@@ -45,6 +45,23 @@ void Compressor::BuildTree()
     GetCodes(head, "");
 
 }
+Node* Compressor::FindNode(char value, Node* node)
+{
+    if (node->isSymb == true && node->symb == value)
+    {
+        return node;
+    }
+    if (node->isSymb == true)
+    {
+        return nullptr;
+    }
+    Node* new_node = FindNode(value, node->left);
+    if (new_node == nullptr)
+    {
+        new_node = FindNode(value, node->right);
+    }
+    return new_node;
+}
 Compressor::Compressor()
 {
     head = 0;
@@ -61,6 +78,7 @@ void Compressor::GetCodes(Node* node, std::string code)
             node->code[k] = code[k];
             k++;
         }
+        node->code[k] = '\0';
         return;
     }
     GetCodes(node->left, code + "0");
