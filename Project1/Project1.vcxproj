@@ -131,7 +131,6 @@
     <ClCompile Include="Project1.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bit2char.h" />
     <ClInclude Include="Compressor.h" />
     <ClInclude Include="Node.h" />
   </ItemGroup>

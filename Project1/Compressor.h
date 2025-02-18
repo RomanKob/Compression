@@ -9,9 +9,11 @@ public:
 	void BuildTree();
 	Node* GetHead() { return head; };
 	Node* FindNode(char value, Node* node);
+	std::string GetOriginalStr(std::string code);
 	Compressor();
 private:
-	void GetCodes(Node* node, std::string code);
+	void GetCodes(Node* node, std::string code, int level);
+	char FindSymbol(std::string code, Node* node);
 	Node* head;
 	int len;
 };

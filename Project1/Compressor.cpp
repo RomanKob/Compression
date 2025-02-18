@@ -42,7 +42,7 @@ void Compressor::BuildTree()
         head = head->next->next;
         len -= 2;
     }
-    GetCodes(head, "");
+    GetCodes(head, "", 1);
 
 }
 Node* Compressor::FindNode(char value, Node* node)
@@ -62,14 +62,52 @@ Node* Compressor::FindNode(char value, Node* node)
     }
     return new_node;
 }
+std::string Compressor::GetOriginalStr(std::string code)
+{
+    std::string temp = "";
+    std::string original_text;
+    for (int i = 0; i < code.length(); i++)
+    {
+        temp += code[i];
+        char ch = FindSymbol(temp, head);
+        if (ch != 0)
+        {
+            original_text += ch;
+            temp = "";
+        }
+    }
+    return original_text;
+}
+char Compressor::FindSymbol(std::string code, Node* node)
+{
+    if (node->isSymb == true)
+    {
+        if (code.compare(node->code) == 0)
+        {
+            return node->symb;
+        }
+        return 0;
+    }
+    if (node->level > code.length())
+    {
+        return 0;
+    }
+    char symb = FindSymbol(code, node->left);
+    if (symb == 0)
+    {
+        symb = FindSymbol(code, node->right);
+    }
+    return symb;
+}
 Compressor::Compressor()
 {
     head = 0;
     len = 0;
 }
 
-void Compressor::GetCodes(Node* node, std::string code)
+void Compressor::GetCodes(Node* node, std::string code, int level)
 {
+    node->level = level;
     if (node->isSymb == true)
     {
         int k = 0;
@@ -81,6 +119,6 @@ void Compressor::GetCodes(Node* node, std::string code)
         node->code[k] = '\0';
         return;
     }
-    GetCodes(node->left, code + "0");
-    GetCodes(node->right, code + "1");
+    GetCodes(node->left, code + "0", level + 1);
+    GetCodes(node->right, code + "1", level + 1);
 }
