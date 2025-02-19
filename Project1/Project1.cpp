@@ -9,7 +9,7 @@
 using namespace std;
 
 
-void CountFreq(FILE* fr, int* freq, string &text)
+long CountFreq(FILE* fr, int* freq)
 {
     fseek(fr, 0L, SEEK_END);
     long lenght = ftell(fr);
@@ -17,9 +17,41 @@ void CountFreq(FILE* fr, int* freq, string &text)
     for (int i = 0; i < lenght; i++)
     {
         unsigned char ch = fgetc(fr);
-        text += ch;
         freq[(unsigned char)ch]++;
     }
+    return lenght;
+}
+void WriteOriginalStr(vector<uint8_t> bitstring, Compressor comp, int len, string filename)
+{
+    auto fw = fopen(("InputFromOutput" + filename.substr(filename.find_last_of('.'))).c_str(), "wb");
+    Node* current_node = comp.GetHead();
+    int k = 0;
+    for (uint8_t byte : bitstring)
+    {
+        for (int i = 7; i >= 0; i--)
+        {
+            k++;
+            if (k > len)
+            {
+                break;
+            }
+            bool bit = (byte >> i) & 1;
+            if (bit == 0)
+            {
+                current_node = current_node->left;
+            }
+            else
+            {
+                current_node = current_node->right;
+            }
+            if (current_node->isSymb == true)
+            {
+                fputc(current_node->symb, fw);
+                current_node = comp.GetHead();
+            }
+        }
+    }
+    fclose(fw);
 }
 void FillList(int* freq, Compressor* comp)
 {  
@@ -35,15 +67,17 @@ void FillList(int* freq, Compressor* comp)
         }
     }
 }
-void BuildBinaryText(string source, string &target, Compressor comp)
+string BuildBinaryText(FILE* fr, Compressor comp, int len)
 {
+    string result;
+    fseek(fr, 0L, SEEK_SET);
     int k = 0;
-    while (source[k])
+    for (int i = 0; i < len; i++)
     {
-        string str = (comp.FindNode(source[k], comp.GetHead()))->code;
-        target += str;
-        k++;
+        string str = (comp.FindNode(fgetc(fr), comp.GetHead()))->code;
+        result += str;
     }
+    return result;
 }
 vector<uint8_t> getBitString(const string& encodedString) {
     vector<uint8_t> bitString;
@@ -67,27 +101,49 @@ vector<uint8_t> getBitString(const string& encodedString) {
 
     return bitString;
 }
+string ReadFileName()
+{
+    string filename = "";
+    while (true)
+    {
+        cout << "Write filename with extension: " << endl;
+        cin >> filename;
+        if (fopen(filename.c_str(), "rb"))
+        {
+            auto fr = fopen(filename.c_str(), "rb");
+            fclose(fr);
+            break;
+        }
+        else
+        {
+            cout << "Unknown filename!" << endl;
+        }
+    }
+    return filename;
+}
 int main()
 {
+    string filename = ReadFileName();
     Compressor comp;
+    long length_orig_str = 0;
     int len = 0;
+    int amountBytes = 0;
 	while (true)
 	{
-        cout << "Select option for Input file:\n1-Compression\n2-Decompression\n3-Exit" << endl;
+        cout << "Select option for " << filename <<":\n1 - Compression\n2 - Decompression\n3 - Exit" << endl;
         string answer;
         cin >> answer;   
         if (answer == "1")
         {
-            auto fr = fopen("Input.txt", "rb");
-            string text = "";
+            auto fr = fopen(filename.c_str(), "rb");
             int freq[256] = { 0 };
-            CountFreq(fr, freq, text);
+            length_orig_str = CountFreq(fr, freq);
             FillList(freq, &comp);
             comp.BuildTree();
-            string new_text = "";
-            BuildBinaryText(text, new_text, comp);
+            string new_text = BuildBinaryText(fr, comp, length_orig_str);
             len = new_text.length();
             vector<uint8_t> bitString = getBitString(new_text);
+            amountBytes = bitString.size();
             auto fw = fopen("Output", "wb");
             fwrite(bitString.data(), sizeof(uint8_t), bitString.size(), fw);
             fclose(fw);
@@ -96,23 +152,19 @@ int main()
         if (answer == "2")
         {
             auto fr = fopen("Output", "rb");
-            char bitstring[1000];
-            auto bytesRead = fread(bitstring, 1, sizeof(bitstring), fr);
-            bitstring[bytesRead] = '\0';
+            string bitstring;
+            int bytesRead = 0;
+            for (size_t i = 0; i < amountBytes; i++)
+            {
+                bitstring += fgetc(fr);
+            }
             string binaryText;
             int k = 0;
-            for (size_t i = 0; i < bytesRead; i++)
+            for (size_t i = 0; i < amountBytes; i++)
             {
                 binaryText += bitset<8>(bitstring[i]).to_string();
             }
-            binaryText[len] = '\0';
-            string orig = comp.GetOriginalStr(binaryText); 
-            auto fw = fopen("InputFromOutput", "w");
-            for (size_t i = 0; i < orig.length(); i++)
-            {
-                fputc(orig[i], fw);
-            }
-            fclose(fw);
+            WriteOriginalStr(getBitString(binaryText), comp, len, filename);
             fclose(fr);
         }
         if (answer == "3")

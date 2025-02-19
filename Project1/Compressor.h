@@ -9,7 +9,7 @@ public:
 	void BuildTree();
 	Node* GetHead() { return head; };
 	Node* FindNode(char value, Node* node);
-	std::string GetOriginalStr(std::string code);
+	void GetOriginalStr(std::string code, int len);
 	Compressor();
 private:
 	void GetCodes(Node* node, std::string code, int level);

@@ -62,21 +62,21 @@ Node* Compressor::FindNode(char value, Node* node)
     }
     return new_node;
 }
-std::string Compressor::GetOriginalStr(std::string code)
+void Compressor::GetOriginalStr(std::string code, int len)
 {
+    auto fw = fopen("InputFromOutput", "w");
     std::string temp = "";
-    std::string original_text;
-    for (int i = 0; i < code.length(); i++)
+    for (int i = 0; i < len; i++)
     {
         temp += code[i];
-        char ch = FindSymbol(temp, head);
+        unsigned char ch = FindSymbol(temp, head);
         if (ch != 0)
         {
-            original_text += ch;
+            fputc(ch, fw);
             temp = "";
         }
     }
-    return original_text;
+    fclose(fw);
 }
 char Compressor::FindSymbol(std::string code, Node* node)
 {
