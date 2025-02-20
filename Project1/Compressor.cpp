@@ -42,8 +42,14 @@ void Compressor::BuildTree()
         head = head->next->next;
         len -= 2;
     }
-    GetCodes(head, "", 1);
-
+    if (head->isSymb == true)
+    {
+        GetCodes(head, "0", 1);
+    }
+    else
+    {
+        GetCodes(head, "", 1);
+    }   
 }
 Node* Compressor::FindNode(char value, Node* node)
 {

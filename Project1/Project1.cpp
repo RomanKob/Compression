@@ -23,7 +23,7 @@ long CountFreq(FILE* fr, int* freq)
 }
 void WriteOriginalStr(vector<uint8_t> bitstring, Compressor comp, int len, string filename)
 {
-    auto fw = fopen(("InputFromOutput" + filename.substr(filename.find_last_of('.'))).c_str(), "wb");
+    auto fw = fopen(("Decompressed_" + filename).c_str(), "wb");
     Node* current_node = comp.GetHead();
     int k = 0;
     for (uint8_t byte : bitstring)
@@ -70,12 +70,18 @@ void FillList(int* freq, Compressor* comp)
 string BuildBinaryText(FILE* fr, Compressor comp, int len)
 {
     string result;
+    string remindedCodes[256] = { "" };
     fseek(fr, 0L, SEEK_SET);
     int k = 0;
     for (int i = 0; i < len; i++)
     {
-        string str = (comp.FindNode(fgetc(fr), comp.GetHead()))->code;
-        result += str;
+        unsigned char ch = fgetc(fr);
+        if (remindedCodes[ch] == "")
+        {
+            string str = (comp.FindNode(ch, comp.GetHead()))->code;
+            remindedCodes[ch] = str;
+        }       
+        result += remindedCodes[ch];
     }
     return result;
 }
@@ -128,6 +134,7 @@ int main()
     long length_orig_str = 0;
     int len = 0;
     int amountBytes = 0;
+    bool isCompressed = false;
 	while (true)
 	{
         cout << "Select option for " << filename <<":\n1 - Compression\n2 - Decompression\n3 - Exit" << endl;
@@ -138,34 +145,40 @@ int main()
             auto fr = fopen(filename.c_str(), "rb");
             int freq[256] = { 0 };
             length_orig_str = CountFreq(fr, freq);
+            if (length_orig_str == 0)
+            {
+                cout << "File is empty!" << endl;
+                break;
+            }
             FillList(freq, &comp);
             comp.BuildTree();
             string new_text = BuildBinaryText(fr, comp, length_orig_str);
             len = new_text.length();
             vector<uint8_t> bitString = getBitString(new_text);
             amountBytes = bitString.size();
-            auto fw = fopen("Output", "wb");
+            auto fw = fopen(("Compressed_" + filename.substr(0, filename.find_last_of("."))).c_str(), "wb");
             fwrite(bitString.data(), sizeof(uint8_t), bitString.size(), fw);
             fclose(fw);
             fclose(fr);
+            isCompressed = true;
         }
         if (answer == "2")
         {
-            auto fr = fopen("Output", "rb");
-            string bitstring;
-            int bytesRead = 0;
-            for (size_t i = 0; i < amountBytes; i++)
+            if (isCompressed)
             {
-                bitstring += fgetc(fr);
+                auto fr = fopen(("Compressed_" + filename.substr(0, filename.find_last_of("."))).c_str(), "rb");
+                vector<uint8_t> bits;
+                for (size_t i = 0; i < amountBytes; i++)
+                {
+                    bits.push_back(fgetc(fr));
+                }
+                WriteOriginalStr(bits, comp, len, filename);
+                fclose(fr);
             }
-            string binaryText;
-            int k = 0;
-            for (size_t i = 0; i < amountBytes; i++)
+            else
             {
-                binaryText += bitset<8>(bitstring[i]).to_string();
+                cout << "File isn't compressed" << endl;
             }
-            WriteOriginalStr(getBitString(binaryText), comp, len, filename);
-            fclose(fr);
         }
         if (answer == "3")
         {
